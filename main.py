@@ -11,6 +11,7 @@ st.write("""
 Para el análisis y comparación de datos astronómicos
 """)
 
+
 # Panel lateral
 sidebar = st.sidebar
 
@@ -33,7 +34,7 @@ else:
     # Opciones para el gráfico
     sidebar.markdown("# Ajustes del gráfico")
     seleccionados = sidebar.multiselect("Selecciona los datos a visualizar", nombres)
-    
+
     if seleccionados:
         tamaño_circulos = sidebar.slider("Ajustar tamaño de círculos", 1.0, 100.0)
 
@@ -61,7 +62,7 @@ else:
     charts = [
         alt.Chart(variables[nombre]).mark_point(filled=False).encode(
             x='Tiempo desde erupcion (d)',
-            y=alt.Y('Magnitud', scale=alt.Scale(domain=(variables[nombre]['Magnitud'].max(), variables[nombre]['Magnitud'].min()), reverse=True)),
+            y='Magnitud',
             size=alt.value(tamaño_circulos),
             color=alt.Color('Archivo:N', scale=alt.Scale(scheme='plasma')),
             opacity=alt.value(0.5),
@@ -74,9 +75,6 @@ else:
     # Combinar gráficos en uno solo
     if charts:
         combined_chart = alt.layer(*charts).interactive()
-        combined_chart = combined_chart.configure_scale(
-            y=alt.Scale(reverse=True)  # Invertir el eje y
-        )
         figura.altair_chart(combined_chart, use_container_width=True)
 
         # Expander con la conclusión de los datos
@@ -85,6 +83,7 @@ else:
             Segun los datos del grafico podemos decir que bla bla bla bla y eso nos permite afirmar que bla bla bla, asi como un maximo de 103949 en comparacion a bla bla 
                      bla bla bla y eso hubiese pasado si chile hubiese ganado 1093293 medallas de oro y fiu seria presidente de chile.
             """)
+
     else:
         st.error("Por favor, selecciona al menos un dato para ver el gráfico.")
 
