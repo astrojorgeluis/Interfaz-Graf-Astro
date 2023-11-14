@@ -11,7 +11,6 @@ st.write("""
 Para el análisis y comparación de datos astronómicos
 """)
 
-
 # Panel lateral
 sidebar = st.sidebar
 
@@ -23,7 +22,7 @@ archivos_cargados = []
 
 # Cargar archivos y guardarlos en un diccionario
 sidebar.markdown("# Carga de datos")
-files = sidebar.file_uploader("Cargar archivos en formato CSV", type=["csv"], accept_multiple_files=True)
+files = sidebar.file_uploader("Cargar archivos en formato CSV o Excel", type=["csv", "xlsx"], accept_multiple_files=True)
 
 # Mostrar mensaje de error si no se selecciona ningún archivo
 if not files:
@@ -34,7 +33,7 @@ else:
     # Opciones para el gráfico
     sidebar.markdown("# Ajustes del gráfico")
     seleccionados = sidebar.multiselect("Selecciona los datos a visualizar", nombres)
-
+   
     if seleccionados:
         tamaño_circulos = sidebar.slider("Ajustar tamaño de círculos", 1.0, 100.0)
 
@@ -49,24 +48,48 @@ else:
             continue
 
         # Leer el contenido del archivo como un DataFrame
-        df = pd.read_csv(file, sep=";", decimal=",")
+        try:
+            if file.type == "application/vnd.ms-excel":
+                df = pd.read_excel(file, decimal=",")
+            else:
+                df = pd.read_csv(file, sep=";", decimal=",")
+        except Exception as e:
+            st.error(f"No se pudo leer el archivo '{nombre}': {e}")
+            continue
+
         # Borrar los valores NaN del DataFrame
         df = df.dropna()
+
+        # Renombrar las columnas según el estándar deseado
+        columnas_deseadas = ['Tiempo en días', 'Magnitud', 'Error', 'Banda']
+        columnas_actuales = df.columns.tolist()
+
+        if set(columnas_deseadas).issubset(columnas_actuales):
+            # Las columnas ya cumplen con el estándar
+            pass
+        else:
+            # Intentar renombrar las columnas según el estándar
+            try:
+                df = df.rename(columns=dict(zip(columnas_actuales, columnas_deseadas)))
+            except KeyError as e:
+                st.warning(f"No se pudo renombrar las columnas del archivo '{nombre}': {e}")
+
         # Asignar el DataFrame a una variable con el nombre del archivo
         variables[nombre] = df
 
         # Agregar el nombre del archivo a la lista de archivos cargados
         archivos_cargados.append(nombre)
 
+
     # Crear gráfico de dispersión para cada archivo seleccionado
     charts = [
         alt.Chart(variables[nombre]).mark_point(filled=False).encode(
-            x='Tiempo desde erupcion (d)',
-            y='Magnitud',
+            x='Tiempo en días',
+            y=alt.Y('Magnitud', scale=alt.Scale(domain=(variables[nombre]['Magnitud'].max(), variables[nombre]['Magnitud'].min()), reverse=True)),
             size=alt.value(tamaño_circulos),
             color=alt.Color('Archivo:N', scale=alt.Scale(scheme='plasma')),
             opacity=alt.value(0.5),
-            tooltip=['Tiempo desde erupcion (d)', 'Magnitud']
+            tooltip=['Tiempo en días', 'Magnitud']
         ).transform_calculate(
             Archivo='"' + nombre + '"'
         ) for nombre in seleccionados
@@ -80,7 +103,7 @@ else:
         # Expander con la conclusión de los datos
         with st.expander("Conclusion de los datos"):
             st.write("""
-            Segun los datos del grafico podemos decir que bla bla bla bla y eso nos permite afirmar que bla bla bla, asi como un maximo de 103949 en comparacion a bla bla 
+            Segun los datos del grafico podemos decir que bla bla bla bla y eso nos permite afirmar que bla bla bla, asi como un maximo de 103949 en comparacion a bla bla
                      bla bla bla y eso hubiese pasado si chile hubiese ganado 1093293 medallas de oro y fiu seria presidente de chile.
             """)
 
