@@ -50,9 +50,11 @@ else:
         # Leer el contenido del archivo como un DataFrame
         try:
             if file.type == "application/vnd.ms-excel":
+                # Para archivos Excel
                 df = pd.read_excel(file, decimal=",")
             else:
-                df = pd.read_csv(file, sep=";", decimal=",")
+                # Para archivos CSV
+                df = pd.read_csv(file, sep=";", decimal=",", engine='python')  # Especificar el motor de lectura como 'python'
         except Exception as e:
             st.error(f"No se pudo leer el archivo '{nombre}': {e}")
             continue
