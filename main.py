@@ -11,7 +11,6 @@ st.write("""
 Para el análisis y comparación de datos astronómicos
 """)
 
-
 # Panel lateral
 sidebar = st.sidebar
 
@@ -62,14 +61,15 @@ else:
     charts = [
         alt.Chart(variables[nombre]).mark_point(filled=False).encode(
             x='Tiempo desde erupcion (d)',
-            y='Magnitud',
+            y=alt.Y('Magnitud', scale=alt.Scale(domain=(variables[nombre]['Magnitud'].max(), variables[nombre]['Magnitud'].min()))),  # Invertir el eje Y
             size=alt.value(tamaño_circulos),
             color=alt.Color('Archivo:N', scale=alt.Scale(scheme='plasma')),
             opacity=alt.value(0.5),
             tooltip=['Tiempo desde erupcion (d)', 'Magnitud']
         ).transform_calculate(
             Archivo='"' + nombre + '"'
-        ) for nombre in seleccionados
+        ).transform('invert', 'y')  # Invertir el eje Y
+        for nombre in seleccionados
     ]
 
     # Combinar gráficos en uno solo
