@@ -61,14 +61,16 @@ else:
     charts = [
         alt.Chart(variables[nombre]).mark_point(filled=False).encode(
             x='Tiempo desde erupcion (d)',
-            y=alt.Y('Magnitud', scale=alt.Scale(domain=(variables[nombre]['Magnitud'].min(), variables[nombre]['Magnitud'].max()))),  # Invertir el eje Y
+            y=alt.Y('Magnitud', scale=alt.Scale(domain=(variables[nombre]['Magnitud'].max(), variables[nombre]['Magnitud'].min()))),  # Invertir el eje Y
             size=alt.value(tamaño_circulos),
             color=alt.Color('Archivo:N', scale=alt.Scale(scheme='plasma')),
             opacity=alt.value(0.5),
             tooltip=['Tiempo desde erupcion (d)', 'Magnitud']
         ).transform_calculate(
             Archivo='"' + nombre + '"'
-        ).transform('invert', 'y')  # Invertir el eje Y
+        ).transform_filter(
+            alt.FieldOneOfPredicate(field='Archivo', oneOf=seleccionados)
+        )
         for nombre in seleccionados
     ]
 
