@@ -22,7 +22,7 @@ archivos_cargados = []
 
 # Cargar archivos y guardarlos en un diccionario
 sidebar.markdown("# Carga de datos")
-files = sidebar.file_uploader("Cargar archivos en formato CSV o Excel", type=["csv", "xlsx"], accept_multiple_files=True)
+files = sidebar.file_uploader("Cargar archivos en formato CSV", type=["csv"], accept_multiple_files=True)
 
 # Mostrar mensaje de error si no se selecciona ningún archivo
 if not files:
@@ -33,7 +33,7 @@ else:
     # Opciones para el gráfico
     sidebar.markdown("# Ajustes del gráfico")
     seleccionados = sidebar.multiselect("Selecciona los datos a visualizar", nombres)
-    
+
     if seleccionados:
         tamaño_circulos = sidebar.slider("Ajustar tamaño de círculos", 1.0, 100.0)
 
@@ -48,28 +48,9 @@ else:
             continue
 
         # Leer el contenido del archivo como un DataFrame
-        if nombre.endswith('.csv'):
-            df = pd.read_csv(file, sep=";", decimal=",")
-        elif nombre.endswith('.xlsx'):
-            df = pd.read_excel(file)
-
-            # Rellenar valores faltantes con un valor por defecto (puedes ajustar esto según tus necesidades)
-            df = df.fillna(value={'Uncertainty': 0.0})
-        else:
-            st.error(f"Formato de archivo no compatible para '{nombre}'. Selecciona un archivo CSV o Excel.")
-            continue
-
+        df = pd.read_csv(file, sep=";", decimal=",")
         # Borrar los valores NaN del DataFrame
         df = df.dropna()
-
-        # Renombrar las columnas según los nombres deseados
-        df = df.rename(columns={
-            df.columns[0]: 'Tiempo en días',
-            df.columns[1]: 'Magnitud',
-            df.columns[2]: 'Error en Mag',
-            df.columns[-1]: 'Tipo de Banda'
-        })
-
         # Asignar el DataFrame a una variable con el nombre del archivo
         variables[nombre] = df
 
@@ -79,15 +60,16 @@ else:
     # Crear gráfico de dispersión para cada archivo seleccionado
     charts = [
         alt.Chart(variables[nombre]).mark_point(filled=False).encode(
-            x='Tiempo en días',
-            y='Magnitud',
+            x='Tiempo desde erupcion (d)',
+            y=alt.Y('Magnitud', scale=alt.Scale(domain=(variables[nombre]['Magnitud'].min(), variables[nombre]['Magnitud'].max()))),  # Invertir el eje Y
             size=alt.value(tamaño_circulos),
-            color=alt.Color('Tipo de Banda:N', scale=alt.Scale(scheme='plasma')),
+            color=alt.Color('Archivo:N', scale=alt.Scale(scheme='plasma')),
             opacity=alt.value(0.5),
-            tooltip=['Tiempo en días', 'Magnitud']
+            tooltip=['Tiempo desde erupcion (d)', 'Magnitud']
         ).transform_calculate(
             Archivo='"' + nombre + '"'
-        ) for nombre in seleccionados
+        ).transform('invert', 'y')  # Invertir el eje Y
+        for nombre in seleccionados
     ]
 
     # Combinar gráficos en uno solo
