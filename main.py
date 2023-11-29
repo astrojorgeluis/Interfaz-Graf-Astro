@@ -1,6 +1,7 @@
 import altair as alt
 import streamlit as st
 import pandas as pd
+import os
 
 # Configurar el modo ancho para acercar el contenido al panel lateral
 st.set_page_config(layout="wide")
@@ -20,15 +21,17 @@ figura = st.empty()
 # Seguimiento de archivos cargados
 archivos_cargados = []
 
-# Cargar archivos y guardarlos en un diccionario
-sidebar.markdown("# Carga de datos")
-files = sidebar.file_uploader("Cargar archivos en formato CSV", type=["csv"], accept_multiple_files=True)
+# Carpeta que contiene los archivos CSV
+carpeta_datos = 'data'
 
-# Mostrar mensaje de error si no se selecciona ningún archivo
-if not files:
-    st.error("Por favor, selecciona al menos un archivo")
+# Obtener la lista de archivos CSV en la carpeta
+archivos_en_carpeta = [archivo for archivo in os.listdir(carpeta_datos) if archivo.endswith('.csv')]
+
+# Mostrar mensaje de error si no se encuentran archivos CSV en la carpeta
+if not archivos_en_carpeta:
+    st.error("No se encontraron archivos CSV en la carpeta especificada.")
 else:
-    nombres = [file.name for file in files]
+    nombres = archivos_en_carpeta
 
     # Opciones para el gráfico
     sidebar.markdown("# Ajustes del gráfico")
@@ -39,8 +42,9 @@ else:
 
     variables = {}  # Diccionario vacío
 
-    for i, file in enumerate(files):
-        nombre = file.name
+    for nombre in seleccionados:
+        # Construir la ruta completa al archivo
+        ruta_completa = os.path.join(carpeta_datos, nombre)
 
         # Verificar si el archivo ya ha sido cargado
         if nombre in archivos_cargados:
@@ -48,7 +52,7 @@ else:
             continue
 
         # Leer el contenido del archivo como un DataFrame
-        df = pd.read_csv(file, sep=";", decimal=",")
+        df = pd.read_csv(ruta_completa, sep=";", decimal=",")
         # Borrar los valores NaN del DataFrame
         df = df.dropna()
         # Asignar el DataFrame a una variable con el nombre del archivo
@@ -56,6 +60,7 @@ else:
 
         # Agregar el nombre del archivo a la lista de archivos cargados
         archivos_cargados.append(nombre)
+
 
     # Crear gráfico de dispersión para cada archivo seleccionado
     charts = [
