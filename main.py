@@ -8,8 +8,8 @@ st.set_page_config(layout="wide")
 
 # Encabezado
 st.write("""
-# Explorador de Datos Astronómicos
-Para el análisis y comparación de datos astronómicos
+# Analisis Curva de Luz
+Nova Sco V1716
 """)
 
 # Panel lateral
